@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+@theme {
+  --color-on-tertiary-container: #343437;
+  --color-outline-variant: #494552;
+  --color-surface-container-high: #292931;
+  --color-primary-fixed: #e8ddff;
+  --color-on-tertiary-fixed-variant: #47464a;
+  --color-secondary-container: #47464a;
+  --color-error-container: #93000a;
+  --color-on-surface: #e3e1ec;
+  --color-secondary-fixed-dim: #c8c5ca;
+  --color-on-background: #e3e1ec;
+  --color-surface: #12131a;
+  --color-on-secondary-fixed-variant: #47464a;
+  --color-tertiary-container: #9e9ca0;
+  --color-on-primary-container: #3c1989;
+  --color-surface-bright: #383941;
+  --color-on-primary-fixed: #21005e;
+  --color-surface-container: #1e1f26;
+  --color-surface-container-lowest: #0d0e15;
+  --color-secondary-fixed: #e4e1e6;
+  --color-primary: #cebdff;
+  --color-background: #12131a;
+  --color-on-secondary: #303033;
+  --color-on-surface-variant: #cac4d4;
+  --color-on-error: #690005;
+  --color-tertiary: #c8c6c9;
+  --color-on-tertiary-fixed: #1b1b1e;
+  --color-on-primary: #381385;
+  --color-surface-variant: #33343c;
+  --color-primary-container: #a78bfa;
+  --color-on-primary-fixed-variant: #4f319c;
+  --color-on-tertiary: #303033;
+  --color-inverse-surface: #e3e1ec;
+  --color-error: #ffb4ab;
+  --color-on-error-container: #ffdad6;
+  --color-inverse-primary: #674bb5;
+  --color-surface-tint: #cebdff;
+  --color-surface-container-low: #1a1b22;
+  --color-tertiary-fixed-dim: #c8c6c9;
+  --color-on-secondary-container: #b6b4b8;
+  --color-tertiary-fixed: #e4e1e5;
+  --color-surface-dim: #12131a;
+  --color-outline: #948e9d;
+  --color-primary-fixed-dim: #cebdff;
+  --color-surface-container-highest: #33343c;
+  --color-inverse-on-surface: #2f3038;
+  --color-on-secondary-fixed: #1b1b1e;
+  --color-secondary: #c8c5ca;
+  --font-body-lg: Inter, sans-serif;
+  --font-label-md: Inter, sans-serif;
+  --font-headline-lg: Inter, sans-serif;
+  --font-display-lg: Inter, sans-serif;
+  --font-body-md: Inter, sans-serif;
+  --font-label-sm: Inter, sans-serif;
+  --font-title-lg: Inter, sans-serif;
+  --font-headline-md: Inter, sans-serif;
+  --spacing-page-margin: 2rem;
+  --spacing-gutter: 1.5rem;
+  --spacing-stack-sm: 0.5rem;
+  --spacing-stack-md: 1rem;
+  --spacing-card-padding: 1.25rem;
+  --text-body-lg: 16px;
+  --text-body-md: 14px;
+  --text-label-md: 12px;
+  --text-label-sm: 11px;
+  --text-title-lg: 20px;
+  --text-headline-md: 24px;
+  --text-headline-lg: 32px;
+  --text-display-lg: 48px;
+}
+
+body {
+  background-color: #12131a;
+  font-family: Inter, sans-serif;
+  color: #e3e1ec;
+  overflow-x: hidden;
+  margin: 0;
+}
+
+.glass-card {
+  background: rgba(30, 31, 38, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(167, 139, 250, 0.1);
+}
+
+.glow-accent {
+  box-shadow: 0 0 12px rgba(167, 139, 250, 0.15);
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.dot-pulse {
+  animation: dotPulse 1.4s infinite ease-in-out both;
+}
+
+@keyframes dotPulse {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}

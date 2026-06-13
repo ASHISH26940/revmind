@@ -31,6 +31,11 @@ def get_summary():
         FROM sales GROUP BY product_name ORDER BY revenue DESC LIMIT 1
     """).fetchone()
 
+    category_breakdown = [dict(r) for r in db.execute("""
+        SELECT category, ROUND(SUM(net_revenue_usd), 2) AS revenue
+        FROM sales GROUP BY category ORDER BY revenue DESC
+    """).fetchall()]
+
     db.close()
 
     return {
@@ -41,6 +46,7 @@ def get_summary():
             "top_region": dict(top_region),
             "top_channel": dict(top_channel),
             "top_product": dict(top_product),
+            "category_breakdown": category_breakdown,
         },
         "status": "ok",
     }
