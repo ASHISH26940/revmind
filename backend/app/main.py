@@ -2,7 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routes import products, summary, trends
+from app.routes import chat, products, summary, trends
 
 app = FastAPI(title="NovaBite BI")
 
@@ -16,6 +16,7 @@ app.add_middleware(
 app.include_router(products.router)
 app.include_router(summary.router)
 app.include_router(trends.router)
+app.include_router(chat.router)
 
 
 def run_dev() -> None:
