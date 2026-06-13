@@ -1,4 +1,6 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+
+const TYPING_SPEED = 25
 
 export default function Chat() {
   const [messages, setMessages] = useState<{ role: string; text: string }[]>([
@@ -6,54 +8,77 @@ export default function Chat() {
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const abortRef = useRef<AbortController | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+
+  const bufferRef = useRef('')
+  const displayedRef = useRef(0)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const msgIdxRef = useRef(-1)
+  const doneRef = useRef(false)
+
+  const updateDisplayed = useCallback(() => {
+    setMessages((prev) => {
+      const idx = msgIdxRef.current
+      if (idx < 0 || idx >= prev.length) return prev
+      const copy = [...prev]
+      const full = bufferRef.current
+      if (!full) return copy
+      const nextLen = Math.min(displayedRef.current + 3, full.length)
+      displayedRef.current = nextLen
+      copy[idx] = { role: 'ai', text: full.slice(0, nextLen) }
+      if (nextLen >= full.length && doneRef.current && intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+      return copy
+    })
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [])
 
   async function handleSubmit() {
     const q = input.trim()
     if (!q || loading) return
     setInput('')
-
-    setMessages((prev) => [...prev, { role: 'user', text: q }])
     setLoading(true)
 
-    setMessages((prev) => [...prev, { role: 'ai', text: '' }])
+    const aiIdx = messages.length + 1
+    msgIdxRef.current = aiIdx
+    setMessages((prev) => [...prev, { role: 'user', text: q }, { role: 'ai', text: '' }])
+
+    bufferRef.current = ''
+    displayedRef.current = 0
+    doneRef.current = false
+    if (intervalRef.current) clearInterval(intervalRef.current)
+    intervalRef.current = setInterval(updateDisplayed, TYPING_SPEED)
 
     try {
-      const ctrl = new AbortController()
-      abortRef.current = ctrl
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: q }),
-        signal: ctrl.signal,
       })
       const reader = res.body!.getReader()
       const decoder = new TextDecoder()
-      let acc = ''
 
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-        acc += decoder.decode(value, { stream: true })
-        setMessages((prev) => {
-          const copy = [...prev]
-          copy[copy.length - 1] = { role: 'ai', text: acc }
-          return copy
-        })
+        bufferRef.current += decoder.decode(value, { stream: true })
       }
     } catch {
-      setMessages((prev) => {
-        const copy = [...prev]
-        copy[copy.length - 1] = { role: 'ai', text: 'Error: failed to get response.' }
-        return copy
-      })
+      bufferRef.current = 'Error: failed to get response.'
     } finally {
+      doneRef.current = true
       setLoading(false)
-      abortRef.current = null
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
     }
   }
+
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
+  }, [])
 
   return (
     <section className="max-w-4xl mx-auto h-[calc(100vh-8rem)] flex flex-col">
@@ -62,7 +87,7 @@ export default function Chat() {
           <span className="material-symbols-outlined text-primary text-[32px]">psychology</span>
         </div>
         <div>
-          <h1 className="font-headline-md text-headline-md text-on-surface">NovaBite AI Assistant</h1>
+          <h1 className="font-headline-md text-headline-md text-on-surface mt-4">NovaBite AI Assistant</h1>
           <p className="text-body-md text-on-surface-variant">Ask complex queries about your business data.</p>
         </div>
       </div>

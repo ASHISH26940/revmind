@@ -9,12 +9,13 @@ export type Tab = 'dashboard' | 'chat'
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('dashboard')
+  const [sidebarOpen, setSidebarOpen] = useState(true)
 
   return (
     <div className="min-h-screen bg-background text-on-surface">
-      <Header tab={tab} onTabChange={setTab} />
-      <Sidebar />
-      <main className="md:ml-64 pt-16 px-page-margin pb-12 transition-all duration-300">
+      <Header tab={tab} onTabChange={setTab} onToggleSidebar={() => setSidebarOpen((s) => !s)} />
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <main className={`pt-16 px-page-margin pb-12 transition-all duration-300 ${sidebarOpen ? 'md:ml-64' : 'md:ml-0'}`}>
         {tab === 'dashboard' ? <Dashboard /> : <Chat />}
       </main>
       <Fab tab={tab} />

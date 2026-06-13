@@ -36,6 +36,20 @@ def get_summary():
         FROM sales GROUP BY category ORDER BY revenue DESC
     """).fetchall()]
 
+    # Year-over-year trends (2025 vs 2024)
+    yoy = {}
+    for year in ('2024', '2025'):
+        row = db.execute("""
+            SELECT
+                SUM(net_revenue_usd) AS revenue,
+                ROUND(SUM(gross_profit_usd) / SUM(net_revenue_usd) * 100, 2) AS margin
+            FROM sales WHERE date >= ? AND date < ?
+        """, (f"{year}-01-01", f"{int(year)+1}-01-01")).fetchone()
+        yoy[year] = dict(row)
+
+    revenue_change = ((yoy['2025']['revenue'] - yoy['2024']['revenue']) / yoy['2024']['revenue'] * 100) if yoy['2024']['revenue'] else 0
+    margin_change = yoy['2025']['margin'] - yoy['2024']['margin'] if yoy['2024']['margin'] else 0
+
     db.close()
 
     return {
@@ -47,6 +61,10 @@ def get_summary():
             "top_channel": dict(top_channel),
             "top_product": dict(top_product),
             "category_breakdown": category_breakdown,
+            "trends": {
+                "revenue_change_pct": round(revenue_change, 1),
+                "margin_change_pct": round(margin_change, 1),
+            },
         },
         "status": "ok",
     }
