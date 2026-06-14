@@ -52,11 +52,15 @@ export default function Chat() {
     if (intervalRef.current) clearInterval(intervalRef.current)
     intervalRef.current = setInterval(updateDisplayed, TYPING_SPEED)
 
+    const history = messages
+      .filter(m => m.role !== 'ai' || m.text)
+      .map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text }))
+
     try {
       const res = await fetch(`${API}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: q }),
+        body: JSON.stringify({ question: q, history }),
       })
       if (!res.ok) {
         bufferRef.current = `Error: ${res.status} ${res.statusText}`

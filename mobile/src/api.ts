@@ -17,11 +17,11 @@ export async function fetchTrends(): Promise<TrendDataPoint[]> {
   return body.data
 }
 
-export async function* streamChat(question: string): AsyncGenerator<string> {
+export async function* streamChat(question: string, history: { role: string; content: string }[] = []): AsyncGenerator<string> {
   const res = await fetch(`${BASE_URL}/api/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ question }),
+    body: JSON.stringify({ question, history }),
   })
   const reader = res.body!.getReader()
   const decoder = new TextDecoder()

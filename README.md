@@ -151,7 +151,9 @@ Run `uv run python backend/seed.py` to populate the database (idempotent — ski
 
 ### Chat
 
-Send `{ "question": "your question" }` to `/api/chat`. The backend builds a compact text context from the database (~500 tokens) containing all KPIs, per-region and per-quarter revenue, category margins, top reps, and channel comparisons. This context is injected into the system prompt.
+Send `{ "question": "your question", "history": [...] }` to `/api/chat`. The backend builds a compact text context from the database (~500 tokens) containing all KPIs, per-region and per-quarter revenue, category margins, top reps, and channel comparisons. This context is injected into the system prompt.
+
+Previous conversation turns can be sent in the optional `history` array as `{role, content}` pairs (OpenAI message format). These are inserted between the system prompt and the current question, giving the LLM awareness of prior context. History is scoped to the page/session — refreshing clears it.
 
 The response streams as SSE via the Groq SDK (`groq` Python package). Temperature is set to 0.1 for factual consistency. If the primary model fails, it falls back through `llama-3.3-70b-versatile` → `llama-3.1-8b-instant`. Fallback models that are decommissioned on Groq (`gemma2-9b-it`, `llama3-70b-8192`) have been removed from the chain.
 
@@ -247,6 +249,28 @@ Web Browser (React SPA)  ──nginx /api──▶  FastAPI  ──▶  SQLite
 - **Prompt versioning**: The context template in `context.py` is hardcoded. A prompt registry with version tracking would make iteration safer.
 - **Dynamic context selection**: Currently all data slices are injected for every question. For very large datasets, a routing layer could select only relevant context.
 - **Mobile push notifications**: Alerts for key metric changes would make the mobile app more useful as a monitoring tool.
+
+## Git History
+
+```
+2788923  project initialization
+da25b8d  CSV → SQLite seeding (pandas, 1000 rows)
+a2fe273  GET /api/products, /api/summary, /api/trends
+ff91393  POST /api/chat with Groq LLM streaming
+43a4082  Backend MVP — data context + routing
+b7709ba  Tailwind CSS + hardcoded KPI dashboard
+5ff0e7a  KPI dashboard UI fixes
+0139850  Unit tests (seed + routes), strict TypeScript
+926b80c  Dockerfiles + docker-compose.yml
+11d2fa9  Spec-accurate project structure
+01e464c  Mobile app — Expo SDK 54
+e69ff87  Groq model fallback, expo/fetch for streams
+24659c6  README update, context size reduction
+280dc0e  Merge mobile branch into main
+b6420fa  Root .gitignore
+60c7d90  README + gitignore cleanup
+b9d4fbb  Remove fallback LLMs failing on HF Spaces
+```
 
 ## Tradeoffs & Shortcuts
 

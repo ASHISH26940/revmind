@@ -25,9 +25,13 @@ export default function Chat() {
     setLoading(true)
     setMessages(prev => [...prev, { role: 'user', text: q }, { role: 'ai', text: '' }])
 
+    const history = messages
+      .filter(m => m.role !== 'ai' || m.text)
+      .map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text }))
+
     let acc = ''
     try {
-      for await (const chunk of streamChat(q)) {
+      for await (const chunk of streamChat(q, history)) {
         acc += chunk
         setMessages(prev => {
           const copy = [...prev]

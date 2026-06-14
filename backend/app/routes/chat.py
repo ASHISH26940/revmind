@@ -19,6 +19,7 @@ def _get_context() -> str:
 
 class ChatRequest(BaseModel):
     question: str
+    history: list[dict] = []
 
 
 @router.post("/api/chat")
@@ -29,7 +30,7 @@ def chat(req: ChatRequest):
     context = _get_context()
 
     return StreamingResponse(
-        stream_answer(req.question, context),
+        stream_answer(req.question, context, req.history),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

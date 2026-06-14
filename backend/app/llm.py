@@ -6,8 +6,8 @@ from app import config
 client = Groq(api_key=config.GROQ_API_KEY, timeout=60)
 
 
-def _build_prompt(question: str, context: str) -> list[dict]:
-    return [
+def _build_prompt(question: str, context: str, history: list[dict]) -> list[dict]:
+    messages: list[dict] = [
         {
             "role": "system",
             "content": (
@@ -18,18 +18,18 @@ def _build_prompt(question: str, context: str) -> list[dict]:
                 f"DATA CONTEXT:\n{context}"
             ),
         },
-        {
-            "role": "user",
-            "content": question,
-        },
     ]
+    for h in history:
+        messages.append({"role": h["role"], "content": h["content"]})
+    messages.append({"role": "user", "content": question})
+    return messages
 
 
-def stream_answer(question: str, context: str):
+def stream_answer(question: str, context: str, history: list[dict] | None = None):
     try:
         stream = client.chat.completions.create(
             model=config.GROQ_MODEL,
-            messages=_build_prompt(question, context),
+            messages=_build_prompt(question, context, history or []),
             temperature=0.1,
             max_completion_tokens=1024,
             top_p=1,
