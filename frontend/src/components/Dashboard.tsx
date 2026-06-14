@@ -4,7 +4,7 @@ import KpiCard from './KpiCard'
 import TrendChart from './TrendChart'
 import CategoryChart from './CategoryChart'
 
-const API = ''
+const API = import.meta.env.VITE_API_URL ?? ''
 
 async function fetchJson(path: string) {
   const res = await fetch(`${API}${path}`)

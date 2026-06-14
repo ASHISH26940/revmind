@@ -80,6 +80,43 @@ npx expo start
 ```
 Scan the QR code with Expo Go app (v54) on your phone. Your phone must be on the same Wi-Fi network as the dev machine.
 
+## Deployment
+
+### Backend (Hugging Face Spaces)
+
+1. Create a Docker Space at https://huggingface.co/new-space
+2. Clone the Space repo and copy the backend files in:
+   ```bash
+   cp -r backend/* /path/to/space/
+   cp -r data/    /path/to/space/
+   ```
+3. Adjust the Dockerfile's `COPY` paths (files are at root in the Space):
+   ```dockerfile
+   COPY . .
+   COPY data/ /app/data/
+   ```
+4. Push to the Space — HF auto-builds
+5. Set `GROQ_API_KEY` in Space → Settings → Repository secrets
+
+The backend seeds the database on every container start (idempotent — skips if already seeded).
+
+### Web Frontend (Vercel)
+
+1. Push the `frontend/` directory to a GitHub repo
+2. Import it in Vercel (Framework preset: Vite)
+3. Add `vercel.json` at the frontend root:
+   ```json
+   {
+     "rewrites": [
+       {
+         "source": "/api/(.*)",
+         "destination": "https://YOUR_USERNAME-novabite-bi-backend.hf.space/api/$1"
+       }
+     ]
+   }
+   ```
+4. Deploy — Vercel proxies `/api/*` calls to the HF backend
+
 ## Environment Variables
 
 See `backend/.env.example`:
@@ -201,7 +238,7 @@ Web Browser (React SPA)  ──nginx /api──▶  FastAPI  ──▶  SQLite
 
 ## What I'd Improve With More Time
 
-- **Persistent SQLite volume in Docker**: Currently the database is seeded at build time and lost on container recreate. A Docker volume would persist it across restarts.
+- **Persistent SQLite volume in Docker**: The DB is seeded on every container start (idempotent). A Docker volume would persist data across restarts and avoid the ~1s seed overhead on cold boot.
 - **Better error handling on frontend**: Network failures, rate limits, and malformed responses could show friendlier messages instead of "Error: failed to get response."
 - **Pagination on products**: Only 12 products so it's fine, but the endpoint should support `?limit` and `?offset` for larger datasets.
 - **Mobile keyboard handling**: The chat input should avoid being hidden by the on-screen keyboard (KeyboardAvoidingView).

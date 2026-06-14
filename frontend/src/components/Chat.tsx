@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 
 const TYPING_SPEED = 30
+const API = import.meta.env.VITE_API_URL ?? ''
 
 export default function Chat() {
   const [messages, setMessages] = useState<{ role: string; text: string }[]>([
@@ -52,11 +53,15 @@ export default function Chat() {
     intervalRef.current = setInterval(updateDisplayed, TYPING_SPEED)
 
     try {
-      const res = await fetch('/api/chat', {
+      const res = await fetch(`${API}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: q }),
       })
+      if (!res.ok) {
+        bufferRef.current = `Error: ${res.status} ${res.statusText}`
+        return
+      }
       const reader = res.body!.getReader()
       const decoder = new TextDecoder()
 
@@ -65,8 +70,8 @@ export default function Chat() {
         if (done) break
         bufferRef.current += decoder.decode(value, { stream: true })
       }
-    } catch {
-      bufferRef.current = 'Error: failed to get response.'
+    } catch (e) {
+      bufferRef.current = `Error: ${e instanceof Error ? e.message : 'failed to get response'}`
     } finally {
       doneRef.current = true
       setLoading(false)
