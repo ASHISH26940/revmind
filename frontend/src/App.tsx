@@ -3,8 +3,6 @@ import Header from './components/Header'
 import Sidebar from './components/Sidebar'
 import Dashboard from './components/Dashboard'
 import Chat from './components/Chat'
-import Fab from './components/Fab'
-
 export type Tab = 'dashboard' | 'chat'
 
 export default function App() {
@@ -13,12 +11,11 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background text-on-surface">
-      <Header tab={tab} onTabChange={setTab} onToggleSidebar={() => setSidebarOpen((s) => !s)} />
-      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Header tab={tab} onTabChange={setTab} onToggleSidebar={() => setSidebarOpen((s) => !s)} sidebarOpen={sidebarOpen} />
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} tab={tab} onTabChange={setTab} />
       <main className={`pt-16 px-page-margin pb-12 transition-all duration-300 ${sidebarOpen ? 'md:ml-64' : 'md:ml-0'}`}>
         {tab === 'dashboard' ? <Dashboard /> : <Chat />}
       </main>
-      <Fab tab={tab} />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 
-const TYPING_SPEED = 25
+const TYPING_SPEED = 30
 
 export default function Chat() {
   const [messages, setMessages] = useState<{ role: string; text: string }[]>([
@@ -23,7 +23,7 @@ export default function Chat() {
       const copy = [...prev]
       const full = bufferRef.current
       if (!full) return copy
-      const nextLen = Math.min(displayedRef.current + 3, full.length)
+      const nextLen = Math.min(displayedRef.current + 1, full.length)
       displayedRef.current = nextLen
       copy[idx] = { role: 'ai', text: full.slice(0, nextLen) }
       if (nextLen >= full.length && doneRef.current && intervalRef.current) {

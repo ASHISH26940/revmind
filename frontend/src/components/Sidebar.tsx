@@ -1,16 +1,23 @@
-const links = [
-  { icon: 'dashboard', label: 'Overview' },
-  { icon: 'bar_chart', label: 'Analytics' },
-  { icon: 'psychology', label: 'AI Insights' },
-  { icon: 'description', label: 'Reporting' },
+import type { Tab } from '../App'
+
+const links: { label: string; tab: Tab }[] = [
+  { label: 'Overview', tab: 'dashboard' },
+  { label: 'AI Insights', tab: 'chat' },
 ]
 
 interface Props {
   open: boolean
   onClose: () => void
+  tab: Tab
+  onTabChange: (t: Tab) => void
 }
 
-export default function Sidebar({ open, onClose }: Props) {
+export default function Sidebar({ open, onClose, tab, onTabChange }: Props) {
+  function handleClick(t: Tab) {
+    onTabChange(t)
+    onClose()
+  }
+
   return (
     <>
       {open && (
@@ -27,35 +34,20 @@ export default function Sidebar({ open, onClose }: Props) {
             close
           </button>
         </div>
-        <div className="mb-4 px-2">
-          <h2 className="text-label-sm uppercase tracking-widest text-on-surface-variant font-bold mb-4">
-            Analytics Engine
-          </h2>
-          <div className="flex flex-col gap-2">
-            {links.map((l, i) => (
-              <div
-                key={l.label}
-                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
-                  i === 0
-                    ? 'bg-secondary-container text-primary font-bold'
-                    : 'text-on-surface-variant hover:bg-surface-container-high'
-                }`}
-              >
-                <span className="material-symbols-outlined">{l.icon}</span>
-                <span className="text-label-md">{l.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="mt-auto px-2">
-          <button className="w-full bg-primary text-on-primary py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all">
-            <span className="material-symbols-outlined">add</span>
-            New Analysis
-          </button>
-          <div className="mt-6 flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg cursor-pointer transition-all">
-            <span className="material-symbols-outlined">contact_support</span>
-            <span className="text-label-md">Support</span>
-          </div>
+        <div className="flex flex-col gap-2 px-2">
+          {links.map((l) => (
+            <div
+              key={l.label}
+              onClick={() => handleClick(l.tab)}
+              className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+                tab === l.tab
+                  ? 'bg-secondary-container text-primary font-bold'
+                  : 'text-on-surface-variant hover:bg-surface-container-high'
+              }`}
+            >
+              <span className="text-label-md">{l.label}</span>
+            </div>
+          ))}
         </div>
       </aside>
     </>

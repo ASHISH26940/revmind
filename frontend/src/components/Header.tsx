@@ -4,6 +4,7 @@ interface Props {
   tab: Tab
   onTabChange: (t: Tab) => void
   onToggleSidebar: () => void
+  sidebarOpen: boolean
 }
 
 const btn = (active: boolean) =>
@@ -11,15 +12,16 @@ const btn = (active: boolean) =>
     active ? 'bg-secondary-container text-on-surface' : 'text-on-surface-variant hover:text-on-surface'
   }`
 
-export default function Header({ tab, onTabChange, onToggleSidebar }: Props) {
+export default function Header({ tab, onTabChange, onToggleSidebar, sidebarOpen }: Props) {
   return (
     <header className="fixed top-0 w-full z-50 border-b border-surface-container-highest backdrop-blur-md bg-surface/80 h-16 flex justify-between items-center px-page-margin">
       <div className="flex items-center gap-4">
         <button
           onClick={onToggleSidebar}
           className="material-symbols-outlined p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-all cursor-pointer leading-none flex items-center justify-center"
+          title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
         >
-          menu
+          {sidebarOpen ? 'menu_open' : 'dock_to_left'}
         </button>
         <span className="text-title-lg font-headline-lg text-primary">NovaBite BI</span>
       </div>

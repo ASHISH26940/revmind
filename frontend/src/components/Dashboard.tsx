@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import type { SummaryData, TrendDataPoint } from '../types'
 import KpiCard from './KpiCard'
 import TrendChart from './TrendChart'
 import CategoryChart from './CategoryChart'
@@ -12,8 +13,8 @@ async function fetchJson(path: string) {
 }
 
 export default function Dashboard() {
-  const [summary, setSummary] = useState<any>(null)
-  const [trends, setTrends] = useState<any[]>([])
+  const [summary, setSummary] = useState<SummaryData | null>(null)
+  const [trends, setTrends] = useState<TrendDataPoint[]>([])
 
   useEffect(() => {
     fetchJson('/api/summary').then(setSummary)
