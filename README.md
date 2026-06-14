@@ -26,7 +26,7 @@ A BI dashboard for NovaBite Consumer Goods with an LLM-powered conversational in
 
 ## Setup
 
-### Docker (all-in-one)
+### Docker (all-in-one — runs backend + web frontend)
 
 ```bash
 cp backend/.env.example backend/.env.local
@@ -34,45 +34,51 @@ cp backend/.env.example backend/.env.local
 
 docker compose up --build
 ```
-- **Web:** http://localhost
+- **Web app:** http://localhost
 - **Backend API:** http://localhost:8000
 - **API docs:** http://localhost:8000/docs
+- **Mobile:** Still needs manual setup (see below)
 
 ### Manual (dev mode)
 
 #### 1. Backend
 
 ```bash
+# Terminal 1
 cd backend
 cp .env.example .env.local
 # Edit .env.local and set GROQ_API_KEY
 
 uv sync
-uv run python backend/seed.py   
-uv run dev                       
+uv run python seed.py
+uv run dev
 ```
-Starts on `http://0.0.0.0:8000` with hot reload.
+Starts on `http://0.0.0.0:8000` with hot reload. The seed script creates `novabite.db` and is idempotent.
 
 #### 2. Web Frontend
 
 ```bash
+# Terminal 2 (backend must be running)
 cd frontend
 bun install
 bun run dev
 ```
-Starts on `http://localhost:5173`, proxies `/api` to the backend.
+Starts on `http://localhost:5173`. Proxies `/api` requests to the backend.
 
-#### 3. Mobile (Expo)
+#### 3. Mobile (Expo Go)
 
 ```bash
+# Terminal 3 (backend must be running)
 cd mobile
 cp .env.example .env
-# Set EXPO_PUBLIC_API_URL to your machine's LAN IP (e.g. http://192.168.0.168:8000)
+# Edit .env — set EXPO_PUBLIC_API_URL to your machine's LAN IP
+# e.g. EXPO_PUBLIC_API_URL=http://192.168.0.168:8000
+# Find it with: hostname -I
 
 npm install
 npx expo start
 ```
-Scan the QR code with Expo Go. The phone needs to be on the same network as your dev machine.
+Scan the QR code with Expo Go app (v54) on your phone. Your phone must be on the same Wi-Fi network as the dev machine.
 
 ## Environment Variables
 
