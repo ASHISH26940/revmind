@@ -22,9 +22,9 @@ def build_context() -> str:
         FROM sales GROUP BY channel ORDER BY revenue DESC
     """).fetchall())
 
-    top_products = [dict(r) for r in db.execute("""
+    all_products = [dict(r) for r in db.execute("""
         SELECT product_name, ROUND(SUM(net_revenue_usd), 2) AS revenue
-        FROM sales GROUP BY product_name ORDER BY revenue DESC LIMIT 5
+        FROM sales GROUP BY product_name ORDER BY revenue DESC
     """).fetchall()]
 
     top_reps = [dict(r) for r in db.execute("""
@@ -58,7 +58,7 @@ def build_context() -> str:
     west_products = [dict(r) for r in db.execute("""
         SELECT product_name, ROUND(SUM(net_revenue_usd), 2) AS revenue
         FROM sales WHERE region = 'West'
-        GROUP BY product_name ORDER BY revenue DESC LIMIT 5
+        GROUP BY product_name ORDER BY revenue DESC
     """).fetchall()]
 
     db.close()
@@ -83,7 +83,7 @@ TABLE: sales (1000 rows)
 REVENUE: ${overview['total_revenue']:,.0f} | UNITS: {overview['total_units']:,} | MARGIN: {overview['profit_margin']}%
 REGIONS: {dict(top_region)}
 CHANNELS: {dict(top_channel)}
-TOP PRODUCTS: {fmt_compact(top_products, 'product_name', 'revenue')}
+ALL PRODUCTS: {fmt_compact(all_products, 'product_name', 'revenue')}
 TOP REPS: {fmt_units(top_reps)}
 2025 REPS: {fmt_units(reps_2025)}
 MARGIN BY CATEGORY: {fmt_pct(category_margin)}

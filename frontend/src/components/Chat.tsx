@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import Markdown from './Markdown'
 
 const TYPING_SPEED = 30
+const CHUNK_SIZE = 5
 const API = import.meta.env.VITE_API_URL ?? ''
 
 export default function Chat() {
@@ -24,7 +26,7 @@ export default function Chat() {
       const copy = [...prev]
       const full = bufferRef.current
       if (!full) return copy
-      const nextLen = Math.min(displayedRef.current + 1, full.length)
+      const nextLen = Math.min(displayedRef.current + CHUNK_SIZE, full.length)
       displayedRef.current = nextLen
       copy[idx] = { role: 'ai', text: full.slice(0, nextLen) }
       if (nextLen >= full.length && doneRef.current && intervalRef.current) {
@@ -53,7 +55,8 @@ export default function Chat() {
     intervalRef.current = setInterval(updateDisplayed, TYPING_SPEED)
 
     const history = messages
-      .filter(m => m.role !== 'ai' || m.text)
+      .slice(1)
+      .filter(m => m.text)
       .map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text }))
 
     try {
@@ -83,6 +86,21 @@ export default function Chat() {
     }
   }
 
+  function renderMessage(m: { role: string; text: string }, i: number) {
+    if (m.role === 'ai' && m.text) return <Markdown text={m.text} />
+    if (m.role === 'user') return <span className="whitespace-pre-wrap">{m.text}</span>
+    if (i === messages.length - 1 && loading) {
+      return (
+        <div className="flex gap-1 items-center">
+          <div className="w-1.5 h-1.5 bg-primary rounded-full dot-pulse" style={{ animationDelay: '0s' }} />
+          <div className="w-1.5 h-1.5 bg-primary rounded-full dot-pulse" style={{ animationDelay: '0.2s' }} />
+          <div className="w-1.5 h-1.5 bg-primary rounded-full dot-pulse" style={{ animationDelay: '0.4s' }} />
+        </div>
+      )
+    }
+    return null
+  }
+
   useEffect(() => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current)
@@ -110,19 +128,13 @@ export default function Chat() {
               </div>
             )}
             <div
-              className={`rounded-xl p-4 text-body-md max-w-[85%] whitespace-pre-wrap ${
+              className={`rounded-xl p-4 text-body-md max-w-[85%] ${
                 m.role === 'user'
                   ? 'bg-primary/10 border border-primary/20 text-on-surface'
                   : 'bg-surface-container border border-surface-container-highest text-on-surface-variant'
               }`}
             >
-              {m.text || (i === messages.length - 1 && loading ? (
-                <div className="flex gap-1 items-center">
-                  <div className="w-1.5 h-1.5 bg-primary rounded-full dot-pulse" style={{ animationDelay: '0s' }} />
-                  <div className="w-1.5 h-1.5 bg-primary rounded-full dot-pulse" style={{ animationDelay: '0.2s' }} />
-                  <div className="w-1.5 h-1.5 bg-primary rounded-full dot-pulse" style={{ animationDelay: '0.4s' }} />
-                </div>
-              ) : null)}
+              {renderMessage(m, i)}
             </div>
           </div>
         ))}
@@ -148,7 +160,7 @@ export default function Chat() {
         </button>
       </div>
 
-      <div className="mt-4 flex justify-center gap-6">
+      {/*<div className="mt-4 flex justify-center gap-6">
         <button
           onClick={() => { setInput('What was the best performing product in the West region?') }}
           className="text-label-sm text-on-surface-variant hover:text-primary flex items-center gap-1 transition-colors"
@@ -163,7 +175,7 @@ export default function Chat() {
           <span className="material-symbols-outlined text-[16px]">compare_arrows</span>
           E-Commerce vs Trade
         </button>
-      </div>
+      </div>*/}
     </section>
   )
 }

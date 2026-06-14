@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons'
 import { scale, verticalScale } from 'react-native-size-matters'
 import { Colors } from '@/constants/theme'
 import { streamChat } from '@/api'
+import Markdown from '@/components/Markdown'
 
 const INITIAL_MESSAGE = { role: 'ai', text: 'Hello! I am your NovaBite BI Intelligence agent. Ask me about your sales data — regions, categories, trends, anything.' }
 
@@ -26,7 +27,8 @@ export default function Chat() {
     setMessages(prev => [...prev, { role: 'user', text: q }, { role: 'ai', text: '' }])
 
     const history = messages
-      .filter(m => m.role !== 'ai' || m.text)
+      .slice(1)
+      .filter(m => m.text)
       .map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text }))
 
     let acc = ''
@@ -71,7 +73,11 @@ export default function Chat() {
             )}
             <View style={[styles.bubble, m.role === 'user' ? styles.userBubble : styles.aiBubble,
             { backgroundColor: m.role === 'user' ? colors.primaryContainer : colors.surfaceContainer }]}>
-              <Text style={[styles.bubbleText, { color: colors.text }]}>{m.text || (i === messages.length - 1 && loading ? '...' : '')}</Text>
+              {m.role === 'ai' && m.text ? (
+                <Markdown text={m.text} colors={colors} />
+              ) : (
+                <Text style={[styles.bubbleText, { color: colors.text }]}>{m.text || (i === messages.length - 1 && loading ? '...' : '')}</Text>
+              )}
             </View>
           </View>
         ))}

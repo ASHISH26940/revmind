@@ -14,7 +14,8 @@ export default function App() {
       <Header tab={tab} onTabChange={setTab} onToggleSidebar={() => setSidebarOpen((s) => !s)} sidebarOpen={sidebarOpen} />
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} tab={tab} onTabChange={setTab} />
       <main className={`pt-16 px-page-margin pb-12 transition-all duration-300 ${sidebarOpen ? 'md:ml-64' : 'md:ml-0'}`}>
-        {tab === 'dashboard' ? <Dashboard /> : <Chat />}
+        <div className={tab === 'dashboard' ? '' : 'hidden'}><Dashboard /></div>
+        <div className={tab === 'chat' ? '' : 'hidden'}><Chat /></div>
       </main>
     </div>
   )
