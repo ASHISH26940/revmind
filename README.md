@@ -162,6 +162,29 @@ Browser (React SPA)  ──nginx /api──▶  FastAPI  ──▶  SQLite
 - **No JOINs, no indexes**: 1,000 rows doesn't need them. Multiple SELECTs preferred for simplicity.
 - **Docker**: Single `docker compose up` builds both services. Frontend served via nginx, backend via uvicorn. Nginx proxies `/api` to the backend container.
 
+## What I'd Improve With More Time
+
+- **Persistent SQLite volume in Docker**: Currently the database is seeded at build time and lost on container recreate. A Docker volume would persist it across restarts.
+- **Better error handling on frontend**: Network failures, rate limits, and malformed responses could show friendlier messages instead of "Error: failed to get response."
+- **Pagination on products**: Only 12 products so it's fine, but the endpoint should support `?limit` and `?offset` for larger datasets.
+- **Mobile chat UX**: The chat input and message bubbles work on mobile but could be optimized — proper keyboard handling, scroll anchoring, swipe gestures.
+- **Request cancellation**: The abort controller was removed during the typewriter refactor. Long responses should be cancellable mid-stream.
+- **CI/CD**: A GitHub Actions workflow that runs tests on push would catch regressions before review.
+- **Prompt versioning**: The context template in `context.py` is hardcoded. A prompt registry with version tracking would make iteration safer.
+- **Dynamic context selection**: Currently all 9 data slices are injected for every question. For very large datasets, a routing layer could select only relevant context.
+
+## Tradeoffs & Shortcuts
+
+- **Pre-computed context over dynamic SQL**: Injecting all aggregates into the prompt is simpler and avoids SQL injection risk, but won't scale to millions of rows. For 1,000 rows it's the right call.
+- **No JOINs, no indexes**: Multiple simple SELECTs are easier to read and debug. With 1,000 rows, query time is sub-ms anyway.
+- **SQLite over PostgreSQL**: No server to manage, file-based, good enough for the data size. Would hit concurrency limits under real load.
+- **Custom SVGs over Recharts**: Saved ~200KB bundle size and gave exact design control, but took longer to implement and has no built-in interactivity (tooltips, zoom).
+- **Flat config module over class-based**: 5 environment variables didn't warrant a config class. Less ceremony, more readable.
+- **`backend/.env.local` instead of root `.env`**: Backend and frontend have different env needs. Keeping per-directory avoids confusion even though the spec shows root `.env.example`.
+- **Single Docker compose profile**: No dev/prod separation. Fast feedback, but the production image includes dev tooling (bun install, full build chain).
+- **No request timeout on LLM calls**: If Groq hangs, the streaming response hangs indefinitely. A timeout wrapper would be safer.
+- **Magic numbers in chart SVGs**: The TrendChart viewBox (800×280) and gridline positions are hardcoded. Responsive sizing could be more robust.
+
 ## Project Structure
 
 ```
@@ -204,6 +227,6 @@ revmind/
 │   ├── nginx.conf
 │   └── package.json
 ├── data/
-│   └── data.csv             # 1,000-row sales dataset
+│   └── novabite_sales_data.csv   # 1,000-row sales dataset
 └── docker-compose.yml
 ```

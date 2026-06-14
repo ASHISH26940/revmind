@@ -4,7 +4,7 @@ import pandas as pd
 import sqlite3
 
 DB_PATH = Path(__file__).parent / "novabite.db"
-CSV_PATH = Path(__file__).parent.parent / "data" / "data.csv"
+CSV_PATH = Path(__file__).parent.parent / "data" / "novabite_sales_data.csv"
 TABLE_NAME = "sales"
 
 
