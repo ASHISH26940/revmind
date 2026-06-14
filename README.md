@@ -16,14 +16,29 @@ A BI dashboard for NovaBite Consumer Goods with an LLM-powered conversational in
 
 ## Prerequisites
 
-- Python ≥ 3.11
-- [uv](https://docs.astral.sh/uv/) (or pip + venv)
+- Python ≥ 3.11, [uv](https://docs.astral.sh/uv/)
 - [bun](https://bun.sh/) (or npm/pnpm)
-- A Groq API key — [free tier at console.groq.com](https://console.groq.com) (no credit card required, 30 RPM)
+- [Docker](https://docs.docker.com/engine/install/) (optional — for containerized run)
+- A Groq API key — [free tier at console.groq.com](https://console.groq.com)
 
 ## Setup
 
-### 1. Backend
+### Quick start (Docker)
+
+```bash
+cp backend/.env.example backend/.env.local
+# Edit backend/.env.local and set GROQ_API_KEY=gsk_your_key
+
+docker compose up --build
+```
+- Frontend at **http://localhost** (port 80)
+
+- Backend API at **http://localhost:8000**
+
+- API docs at **http://localhost:8000/docs**
+### Manual (dev mode)
+
+#### 1. Backend
 
 ```bash
 cd backend
@@ -31,13 +46,13 @@ cp .env.example .env.local
 # Edit .env.local and set GROQ_API_KEY=gsk_your_key
 
 uv sync
-uv run python ../backend/seed.py
+uv run python backend/seed.py
 uv run dev
 ```
 
-The server starts at `http://0.0.0.0:8000` with hot reload. API docs at `/docs`.
+Starts on `http://0.0.0.0:8000` with hot reload.
 
-### 2. Frontend
+#### 2. Frontend
 
 ```bash
 cd frontend
@@ -45,7 +60,7 @@ bun install
 bun run dev
 ```
 
-Starts at `http://localhost:5173`, proxies `/api` to the backend.
+Starts on `http://localhost:5173`, proxies `/api` to the backend.
 
 ## Environment Variables
 
@@ -94,17 +109,17 @@ Test questions that should work:
 ## Architecture
 
 ```
-Browser (React SPA)  ──proxy /api──▶  FastAPI  ──▶  SQLite
-                        :5173            :8000
-                            │
-                            ▼
-                         Groq API
-                    (LLM inference)
+Browser (React SPA)  ──nginx /api──▶  FastAPI  ──▶  SQLite
+                         :80              :8000
+                             │
+                             ▼
+                          Groq API
+                     (LLM inference)
 ```
 
 - The dashboard fetches summary + trends on mount for KPI cards and charts.
 - Chat questions go through the backend, which pre-computes data slices (cached in memory) and sends them as prompt context — no dynamic SQL generation, no SQL injection risk.
-- The typewriter effect on the frontend runs at 25ms per tick (3 chars/tick) for a natural streaming feel.
+- The typewriter effect on the frontend runs at 30ms per tick (1 char/tick) for a natural ChatGPT-like streaming feel.
 
 ## Frontend Components
 
@@ -113,11 +128,10 @@ Browser (React SPA)  ──proxy /api──▶  FastAPI  ──▶  SQLite
 | `Dashboard` | Fetches `/api/summary` + `/api/trends`, renders KPIs + charts |
 | `Chat` | Streaming chat with typewriter, suggestion buttons |
 | `Sidebar` | Collapsible nav (overlay on mobile, persistent on desktop) |
-| `Header` | Tab switcher, hamburger toggle, avatar |
+| `Header` | Tab switcher, sidebar toggle, centered nav |
 | `KpiCard` | Metric display with trend indicator |
 | `TrendChart` | SVG line chart — monthly revenue |
 | `CategoryChart` | SVG bar chart — category breakdown |
-| `Fab` | Floating action button on dashboard |
 
 ## Scripts
 
@@ -146,6 +160,7 @@ Browser (React SPA)  ──proxy /api──▶  FastAPI  ──▶  SQLite
 - **Custom SVG over Recharts**: Removed recharts dependency; ~6KB vs ~200KB, exact design control.
 - **Separate `.env` per directory**: Backend needs API keys, frontend doesn't. `backend/.env.local` is gitignored.
 - **No JOINs, no indexes**: 1,000 rows doesn't need them. Multiple SELECTs preferred for simplicity.
+- **Docker**: Single `docker compose up` builds both services. Frontend served via nginx, backend via uvicorn. Nginx proxies `/api` to the backend container.
 
 ## Project Structure
 
@@ -163,23 +178,32 @@ revmind/
 │   │       ├── products.py # GET /api/products
 │   │       ├── summary.py  # GET /api/summary
 │   │       └── trends.py   # GET /api/trends
+│   ├── tests/
+│   │   ├── conftest.py     # FastAPI TestClient fixture
+│   │   ├── test_seed.py    # 6 seed tests
+│   │   └── test_routes.py  # 13 route tests
 │   ├── seed.py             # Idempotent CSV→SQLite loader
+│   ├── Dockerfile
 │   ├── .env.example
 │   ├── pyproject.toml
 │   └── novabite.db         # SQLite DB (gitignored)
 ├── frontend/
-│   └── src/
-│       ├── App.tsx          # Root: tab routing + sidebar
-│       ├── index.css        # Tailwind v4 + custom theme
-│       └── components/
-│           ├── Dashboard.tsx
-│           ├── Chat.tsx
-│           ├── Header.tsx
-│           ├── Sidebar.tsx
-│           ├── KpiCard.tsx
-│           ├── TrendChart.tsx
-│           ├── CategoryChart.tsx
-│           └── Fab.tsx
-└── data/
-    └── data.csv             # 1,000-row sales dataset
+│   ├── src/
+│   │   ├── App.tsx          # Root: tab routing + sidebar
+│   │   ├── types.ts         # TypeScript interfaces
+│   │   ├── index.css        # Tailwind v4 + custom theme
+│   │   └── components/
+│   │       ├── Dashboard.tsx
+│   │       ├── Chat.tsx
+│   │       ├── Header.tsx
+│   │       ├── Sidebar.tsx
+│   │       ├── KpiCard.tsx
+│   │       ├── TrendChart.tsx
+│   │       └── CategoryChart.tsx
+│   ├── Dockerfile
+│   ├── nginx.conf
+│   └── package.json
+├── data/
+│   └── data.csv             # 1,000-row sales dataset
+└── docker-compose.yml
 ```
