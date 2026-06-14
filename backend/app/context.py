@@ -49,10 +49,29 @@ def build_context() -> str:
         GROUP BY channel
     """).fetchall()]
 
+    reps_2025 = [dict(r) for r in db.execute("""
+        SELECT sales_rep, SUM(units_sold) AS units
+        FROM sales WHERE date >= '2025-01-01' AND date < '2026-01-01'
+        GROUP BY sales_rep ORDER BY units DESC LIMIT 5
+    """).fetchall()]
+
+    west_products = [dict(r) for r in db.execute("""
+        SELECT product_name, ROUND(SUM(net_revenue_usd), 2) AS revenue
+        FROM sales WHERE region = 'West'
+        GROUP BY product_name ORDER BY revenue DESC LIMIT 5
+    """).fetchall()]
+
     db.close()
 
-    def fmt_reps(reps): return ', '.join(f"{r['sales_rep']}({r['units']}u)" for r in reps)
-    def fmt_margin(items): return ', '.join(f"{i['category']}:{i['margin']}%" for i in items)
+    def fmt_compact(items, label_key, val_key, fmt="${:,.0f}"):
+        return ', '.join(f"{i[label_key]}({fmt.format(i[val_key])})" for i in items)
+
+    def fmt_units(items):
+        return ', '.join(f"{i['sales_rep']}({i['units']}u)" for i in items)
+
+    def fmt_pct(items):
+        return ', '.join(f"{i['category']}({i['margin']}%)" for i in items)
+
     def fmt_region_q(items):
         groups = {}
         for i in items:
@@ -60,13 +79,15 @@ def build_context() -> str:
         return '; '.join(f"{r}: " + ', '.join(f"{q}={v}" for q, v in qs.items()) for r, qs in groups.items())
 
     return f"""
-TABLE: sales (1000 rows, columns: date,region,channel,category,product,units,revenue,profit)
+TABLE: sales (1000 rows)
 REVENUE: ${overview['total_revenue']:,.0f} | UNITS: {overview['total_units']:,} | MARGIN: {overview['profit_margin']}%
 REGIONS: {dict(top_region)}
 CHANNELS: {dict(top_channel)}
-TOP PRODUCTS: {', '.join(f"{p['product_name']}(${p['revenue']:,.0f})" for p in top_products)}
-TOP REPS (all): {fmt_reps(top_reps)}
-MARGIN BY CATEGORY: {fmt_margin(category_margin)}
+TOP PRODUCTS: {fmt_compact(top_products, 'product_name', 'revenue')}
+TOP REPS: {fmt_units(top_reps)}
+2025 REPS: {fmt_units(reps_2025)}
+MARGIN BY CATEGORY: {fmt_pct(category_margin)}
 REGION x QUARTER: {fmt_region_q(region_quarter)}
-CHANNEL COMPARE: {', '.join(f"{c['channel']}=${c['revenue']:,.0f}" for c in channel_compare)}
+CHANNEL COMPARE: {' | '.join(f"{c['channel']}=${c['revenue']:,.0f}" for c in channel_compare)}
+WEST PRODUCTS: {fmt_compact(west_products, 'product_name', 'revenue')}
 """
