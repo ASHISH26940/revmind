@@ -1,14 +1,13 @@
-import json
-from typing import Generator
-
-import httpx
+from groq import Groq
 
 from app import config
 
-GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+client = Groq(api_key=config.GROQ_API_KEY)
 
-# Models confirmed available on Groq free tier
-FALLBACK_MODELS = ["llama-3.1-8b-instant", "llama3-8b-8192", "gemma2-9b-it"]
+FALLBACK_MODELS = [
+    "llama-3.1-8b-instant",
+    "llama-3.3-70b-versatile",
+]
 
 
 def _build_prompt(question: str, context: str) -> list[dict]:
@@ -30,47 +29,29 @@ def _build_prompt(question: str, context: str) -> list[dict]:
     ]
 
 
-def _request(model: str, question: str, context: str) -> Generator[str, None, None]:
-    payload = {
-        "model": model,
-        "messages": _build_prompt(question, context),
-        "stream": True,
-        "temperature": 0.1,
-    }
-    headers = {
-        "Authorization": f"Bearer {config.GROQ_API_KEY}",
-        "Content-Type": "application/json",
-    }
-
-    with httpx.Client(timeout=60) as client:
-        with client.stream("POST", GROQ_URL, json=payload, headers=headers) as resp:
-            if resp.status_code == 400:
-                body = resp.read()
-                raise RuntimeError(f"Groq 400: {body.decode()}")
-            resp.raise_for_status()
-            for line in resp.iter_lines():
-                if not line.startswith("data: "):
-                    continue
-                chunk = line.removeprefix("data: ")
-                if chunk.strip() == "[DONE]":
-                    break
-                try:
-                    delta = json.loads(chunk)
-                    token = delta["choices"][0]["delta"].get("content", "")
-                    if token:
-                        yield token
-                except (json.JSONDecodeError, KeyError, IndexError):
-                    continue
+def _stream_model(model: str, question: str, context: str):
+    return client.chat.completions.create(
+        model=model,
+        messages=_build_prompt(question, context),
+        temperature=0.1,
+        max_completion_tokens=1024,
+        top_p=1,
+        stream=True,
+        stop=None,
+    )
 
 
-def stream_answer(question: str, context: str) -> Generator[str, None, None]:
+def stream_answer(question: str, context: str):
     models = [config.GROQ_MODEL] + [m for m in FALLBACK_MODELS if m != config.GROQ_MODEL]
     last_error = None
     for model in models:
         try:
-            yield from _request(model, question, context)
+            for chunk in _stream_model(model, question, context):
+                content = chunk.choices[0].delta.content
+                if content:
+                    yield content
             return
-        except RuntimeError as e:
+        except Exception as e:
             last_error = e
             continue
     raise RuntimeError(f"All Groq models failed. Last error: {last_error}")

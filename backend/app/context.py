@@ -43,51 +43,30 @@ def build_context() -> str:
         FROM sales GROUP BY region, quarter ORDER BY region, quarter
     """).fetchall()]
 
-    yearly_reps = [dict(r) for r in db.execute("""
-        SELECT sales_rep, SUM(units_sold) AS units
-        FROM sales WHERE date >= '2025-01-01' AND date < '2026-01-01'
-        GROUP BY sales_rep ORDER BY units DESC LIMIT 5
-    """).fetchall()]
-
     channel_compare = [dict(r) for r in db.execute("""
         SELECT channel, ROUND(SUM(net_revenue_usd), 2) AS revenue
         FROM sales WHERE channel IN ('E-Commerce', 'Modern Trade')
         GROUP BY channel
     """).fetchall()]
 
-    west_products = [dict(r) for r in db.execute("""
-        SELECT product_name, ROUND(SUM(net_revenue_usd), 2) AS revenue
-        FROM sales WHERE region = 'West'
-        GROUP BY product_name ORDER BY revenue DESC LIMIT 5
-    """).fetchall()]
-
     db.close()
 
+    def fmt_reps(reps): return ', '.join(f"{r['sales_rep']}({r['units']}u)" for r in reps)
+    def fmt_margin(items): return ', '.join(f"{i['category']}:{i['margin']}%" for i in items)
+    def fmt_region_q(items):
+        groups = {}
+        for i in items:
+            groups.setdefault(i['region'], {})[i['quarter']] = f"${i['revenue']:,.0f}"
+        return '; '.join(f"{r}: " + ', '.join(f"{q}={v}" for q, v in qs.items()) for r, qs in groups.items())
+
     return f"""
-DATABASE OVERVIEW
-- Table: sales (1000 rows)
-- Columns: transaction_id, date, month, quarter, sku, product_name, category, subcategory, region, channel, sales_rep, units_sold, unit_price_usd, gross_revenue_usd, discount_pct, net_revenue_usd, cogs_usd, gross_profit_usd
-
-GLOBAL KPIs
-- Total net revenue: ${overview['total_revenue']:,.2f}
-- Total units sold: {overview['total_units']:,}
-- Gross profit margin: {overview['profit_margin']}%
-
-REVENUE BY REGION: {top_region}
-
-REVENUE BY CHANNEL: {top_channel}
-
-TOP 5 PRODUCTS BY REVENUE: {top_products}
-
-TOP 5 SALES REPS (all time, by units): {top_reps}
-
-GROSS PROFIT MARGIN BY CATEGORY: {category_margin}
-
-REVENUE BY REGION AND QUARTER: {region_quarter}
-
-TOP 5 SALES REPS IN 2025 (by units): {yearly_reps}
-
-E-COMMERCE vs MODERN TRADE REVENUE: {channel_compare}
-
-TOP 5 PRODUCTS IN WEST REGION: {west_products}
+TABLE: sales (1000 rows, columns: date,region,channel,category,product,units,revenue,profit)
+REVENUE: ${overview['total_revenue']:,.0f} | UNITS: {overview['total_units']:,} | MARGIN: {overview['profit_margin']}%
+REGIONS: {dict(top_region)}
+CHANNELS: {dict(top_channel)}
+TOP PRODUCTS: {', '.join(f"{p['product_name']}(${p['revenue']:,.0f})" for p in top_products)}
+TOP REPS (all): {fmt_reps(top_reps)}
+MARGIN BY CATEGORY: {fmt_margin(category_margin)}
+REGION x QUARTER: {fmt_region_q(region_quarter)}
+CHANNEL COMPARE: {', '.join(f"{c['channel']}=${c['revenue']:,.0f}" for c in channel_compare)}
 """

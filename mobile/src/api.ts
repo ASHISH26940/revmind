@@ -1,3 +1,4 @@
+import { fetch } from 'expo/fetch'
 import type { SummaryData, TrendDataPoint } from './types'
 
 // In development, use your machine's local IP.

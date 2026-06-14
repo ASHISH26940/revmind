@@ -1,20 +1,21 @@
 import { useState, useRef, useCallback } from 'react'
-import { View, Text, TextInput, TouchableOpacity, ScrollView, useColorScheme, StyleSheet } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, ScrollView, RefreshControl, useColorScheme, StyleSheet } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { MaterialIcons } from '@expo/vector-icons'
 import { scale, verticalScale } from 'react-native-size-matters'
 import { Colors } from '@/constants/theme'
 import { streamChat } from '@/api'
 
+const INITIAL_MESSAGE = { role: 'ai', text: 'Hello! I am your NovaBite BI Intelligence agent. Ask me about your sales data — regions, categories, trends, anything.' }
+
 export default function Chat() {
   const scheme = useColorScheme()
   const colors = Colors[scheme ?? 'dark']
   const insets = useSafeAreaInsets()
-  const [messages, setMessages] = useState<{ role: string; text: string }[]>([
-    { role: 'ai', text: 'Hello! I am your NovaBite BI Intelligence agent. Ask me about your sales data — regions, categories, trends, anything.' },
-  ])
+  const [messages, setMessages] = useState<{ role: string; text: string }[]>([INITIAL_MESSAGE])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
   const scrollRef = useRef<ScrollView>(null)
 
   const handleSend = useCallback(async () => {
@@ -45,9 +46,17 @@ export default function Chat() {
     }
   }, [input, loading])
 
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true)
+    setMessages([INITIAL_MESSAGE])
+    setInput('')
+    setRefreshing(false)
+  }, [])
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView ref={scrollRef} style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + scale(8) }]}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />}
         onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}>
         {messages.map((m, i) => (
           <View key={i} style={[styles.row, m.role === 'user' ? styles.userRow : styles.aiRow]}>
