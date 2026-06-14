@@ -14,8 +14,8 @@ const btn = (active: boolean) =>
 
 export default function Header({ tab, onTabChange, onToggleSidebar, sidebarOpen }: Props) {
   return (
-    <header className="fixed top-0 w-full z-50 border-b border-surface-container-highest backdrop-blur-md bg-surface/80 h-16 flex justify-between items-center px-page-margin">
-      <div className="flex items-center gap-4">
+    <header className="fixed top-0 w-full z-50 border-b border-surface-container-highest backdrop-blur-md bg-surface/80 h-16 flex items-center px-page-margin">
+      <div className="flex items-center gap-4 shrink-0">
         <button
           onClick={onToggleSidebar}
           className="material-symbols-outlined p-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-primary transition-all cursor-pointer leading-none flex items-center justify-center"
@@ -23,17 +23,18 @@ export default function Header({ tab, onTabChange, onToggleSidebar, sidebarOpen 
         >
           {sidebarOpen ? 'menu_open' : 'dock_to_left'}
         </button>
-        <span className="text-title-lg font-headline-lg text-primary">NovaBite BI</span>
+        <span className="text-title-lg font-headline-lg text-primary pt-1">NovaBite BI</span>
       </div>
-      <nav className="flex items-center bg-surface-container-lowest p-1 rounded-lg border border-outline-variant">
-        <button className={btn(tab === 'dashboard')} onClick={() => onTabChange('dashboard')}>
-          Dashboard
-        </button>
-        <button className={btn(tab === 'chat')} onClick={() => onTabChange('chat')}>
-          Chat
-        </button>
+      <nav className="flex-1 flex justify-center">
+        <div className="flex items-center bg-surface-container-lowest p-1 rounded-lg border border-outline-variant">
+          <button className={btn(tab === 'dashboard')} onClick={() => onTabChange('dashboard')}>
+            Dashboard
+          </button>
+          <button className={btn(tab === 'chat')} onClick={() => onTabChange('chat')}>
+            Chat
+          </button>
+        </div>
       </nav>
-      <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-[10px]">JD</div>
     </header>
   )
 }

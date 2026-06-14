@@ -1,8 +1,8 @@
 import type { Tab } from '../App'
 
-const links: { label: string; tab: Tab }[] = [
-  { label: 'Overview', tab: 'dashboard' },
-  { label: 'AI Insights', tab: 'chat' },
+const links: { icon: string; label: string; tab: Tab }[] = [
+  { icon: 'dashboard', label: 'Overview', tab: 'dashboard' },
+  { icon: 'psychology', label: 'AI Insights', tab: 'chat' },
 ]
 
 interface Props {
@@ -45,6 +45,7 @@ export default function Sidebar({ open, onClose, tab, onTabChange }: Props) {
                   : 'text-on-surface-variant hover:bg-surface-container-high'
               }`}
             >
+              <span className="material-symbols-outlined">{l.icon}</span>
               <span className="text-label-md">{l.label}</span>
             </div>
           ))}
